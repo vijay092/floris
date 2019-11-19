@@ -65,7 +65,7 @@ class FlowField():
             with_resolution=wake.velocity_model.model_grid_resolution
         )
 
-    def _discretize_turbine_domain(self):
+    def _discretize_turbine_domain(self, x_points_include=None, y_points_include=None, z_points_include=None):
         """
         Create grid points at each turbine
         """
@@ -102,6 +102,16 @@ class FlowField():
                     y_grid[i, j, k] = yoffset * cosd(-1 * self.wind_direction) + \
                         xoffset * sind(-1 * self.wind_direction) + coord.x2
 
+        # if x_points_include is not None:
+        #     for x,y,z in zip(x_points_include=None, y_points_include=None, z_points_include=None):
+
+
+        # if x_points_include is not None:
+        print('x')
+        print(x_grid.shape)
+        print(x_grid)
+        print('y')
+        print(y_grid)
         return x_grid, y_grid, z_grid
 
     def _discretize_freestream_domain(self, xmin, xmax, ymin, ymax, zmin, zmax, resolution):
