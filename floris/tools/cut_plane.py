@@ -13,6 +13,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import griddata
 
+from scipy.interpolate import RegularGridInterpolator
+
 def nudge_outward(x):
     """
     Avoid numerical issue in grid data by sligly expanding input x,y
@@ -78,22 +80,60 @@ class _CutPlane():
         # Make initial meshing
         self._remesh()
 
+    # def _remesh(self):
+
+    #     print(self.x1_in[:5])
+    #     print(self.x1_lin[:5])
+
+    #     # Mesh and interpolate u, v and w
+    #     self.x1_mesh, self.x2_mesh = np.meshgrid(self.x1_lin, self.x2_lin)
+    #     self.u_mesh = griddata(
+    #         np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
+    #         self.u_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
+    #         method='linear')
+    #     # self.v_mesh = griddata(
+    #     #     np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
+    #     #     self.v_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
+    #     #     method='nearest')
+    #     # self.w_mesh = griddata(
+    #     #     np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
+    #     #     self.w_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
+    #     #     method='nearest')
+
+    #     # Save flat vectors
+    #     self.x1_flat = self.x1_mesh.flatten()
+    #     self.x2_flat = self.x2_mesh.flatten()
+
+    #     # Save u-cubed
+    #     self.u_cubed = self.u_mesh**3
+
     def _remesh(self):
+
+        u_shape = np.reshape(self.u_in,(len(self.x1_lin),-1))
+        my_interpolating_function = RegularGridInterpolator((nudge_outward(self.x1_lin), nudge_outward(self.x2_lin)), u_shape,method='nearest')
+        print(my_interpolating_function((200,75)))
+        pts = np.array([self.x1_lin,self.x2_lin])
+        xyz_grid = np.meshgrid(self.x1_lin, self.x2_lin, indexing='ij')
+
+        xyz_list = np.reshape(xyz_grid, (2, -1), order='C').T
+        self.u_mesh = my_interpolating_function(xyz_list)
+
+        print('REMESH!')
 
         # Mesh and interpolate u, v and w
         self.x1_mesh, self.x2_mesh = np.meshgrid(self.x1_lin, self.x2_lin)
-        self.u_mesh = griddata(
-            np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
-            self.u_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
-            method='cubic')
-        self.v_mesh = griddata(
-            np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
-            self.v_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
-            method='cubic')
-        self.w_mesh = griddata(
-            np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
-            self.w_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
-            method='cubic')
+        # self.u_mesh = griddata(
+        #     np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
+        #     self.u_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
+        #     method='cubic')
+        # self.v_mesh = griddata(
+        #     np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
+        #     self.v_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
+        #     method='cubic')
+        # self.w_mesh = griddata(
+        #     np.column_stack([nudge_outward(self.x1_in), nudge_outward(self.x2_in)]),
+        #     self.w_in, (self.x1_mesh.flatten(), self.x2_mesh.flatten()),
+        #     method='cubic')
 
         # Save flat vectors
         self.x1_flat = self.x1_mesh.flatten()
