@@ -19,39 +19,62 @@ class FarmMARL(gym.Env):
         self.fi = fi
         self.agents = agents
         self.yaw_angles = [0 for agent in agents]
-        self.values = [agent.turbine.power for agent in agents]
+        self.farm_power = self._calculate_farm_power()
 
-        # there are three actions: decrease 1 deg, stay, and increase 1 deg
-        self.action_space = gym.spaces.Discrete(3)
+        self.turbine_rated_power = 5
 
-        self.observation_space = gym.spaces.Discrete(50)
+        self.N = len(agents)
+
+        # there are three actions: decrease 1 deg, stay, and increase 1 deg for each turbine, so 3^N
+        # possible action choices
+        self.action_space = gym.spaces.Discrete(3**self.N)
+        
+        # technically this should range from -30 to 30, but 
+        self.observation_space = gym.spaces.Discrete(60)
 
     def step(self, action):
         """
         action: list of turbine yaw angle deltas (one for each turbine in the wind farm)
         """
-        # updated yaw angles: action_value will be 0, 1, or 2
-        new_yaw_angles = [yaw_angle + action_value - 1 for (yaw_angle, action_value) in zip(self.yaw_angles, action)]
-        # updated value function outputs
-        new_values = self._calculate_values()
+        deltas = [None for agent in self.agents]
+        x = action
+        for i,_ in enumerate(self.agents):
+            deltas[i] = (x % 3**(self.N - (i+1)) ) - 1
+            x = x % 3**(self.N - (i+1))
 
-        # calculate the wakes due to the new yaw angles
+        # updated yaw angles: delta will be -1, 0, or 1
+        new_yaw_angles = [yaw_angle + delta for (yaw_angle, delta) in zip(self.yaw_angles, deltas)]
+
+        # calculate the wakes due to the new yaw angles (this consitutes the actual "step")
         self.fi.calculate_wake(yaw_angles=new_yaw_angles)
+
+        # updated value function outputs
+        new_farm_power = self._calculate_farm_power()
 
         # update the wind farm yaw angles
         self.yaw_angles = new_yaw_angles
         
         # calculate reward based on the change in the value function
-        rewards = [new_value - value for (new_value, value) in zip(new_values, self.values)]
+        reward = new_farm_power - self.farm_power
 
-        # reset the internally tracked value function outputs
-        self.values = new_values
+        # threshold is 1% of the rated power of the entire wind farm 
+        threshold = self.N * self.turbine_rated_power * 0.01
 
-        done = False
+        if new_farm_power - self.farm_power < threshold:
+            done = True
+        else:
+            done = False
 
-        return [self.yaw_angles, rewards, done, None]
+        # reset the internally tracked farm power level
+        self.farm_power = new_farm_power
 
-    def _calculate_values(self):
+        # the state of the wind farm is obtained by considering the turbines in aggregate
+        return [self.yaw_angles, reward, done, None]
+
+    def _calculate_farm_power(self):
+        return sum([agent.turbine.power for agent in self.agents])
+
+    def _calculate_farm_values(self):
         """
         Returns a list of values corresponding to each turbine in the wind farm.
         """

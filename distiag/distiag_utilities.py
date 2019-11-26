@@ -22,3 +22,9 @@ def initialize_agent_list(fi, layout_array):
         agents.append(agent)
 
     return agents
+
+def create_grid(lower_bounds, upper_bounds, bins, offsets):
+    """
+    Create a grid to be used with a tiling algorithm.
+    """
+    return
