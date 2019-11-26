@@ -1,6 +1,8 @@
 import floris
 import floris.tools as wfct
 
+import numpy as np
+
 # Agent object that encapsulates necessary turbine information
 class Agent():
     def __init__(self, turbine, alias, coordinates):
@@ -26,5 +28,16 @@ def initialize_agent_list(fi, layout_array):
 def create_grid(lower_bounds, upper_bounds, bins, offsets):
     """
     Create a grid to be used with a tiling algorithm.
+
+    Returns a numpy array of numpy arrays, each one representing a tiling along each dimension
     """
-    return
+    if len(lower_bounds) != len(upper_bounds) or len(bins) != len(offsets) or len(bins) != len(lower_bounds):
+        raise ValueError('Grid dimensions do not agree')
+
+    grid = []
+
+    for lower_bound,upper_bound,bin_num,offset in zip(lower_bounds, upper_bounds, bins, offsets):
+        row = np.linspace(lower_bound, upper_bound, num=bin_num-1) - offset
+        grid.append(row)
+
+    return np.array(grid)
