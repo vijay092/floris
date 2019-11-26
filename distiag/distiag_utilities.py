@@ -41,7 +41,7 @@ def create_grid(lower_bounds, upper_bounds, bins, offsets):
     grid = []
 
     for lower_bound,upper_bound,bin_num,offset in zip(lower_bounds, upper_bounds, bins, offsets):
-        row = np.linspace(lower_bound, upper_bound, num=bin_num-1) + offset
+        row = np.linspace(lower_bound, upper_bound, num=bin_num) + offset
         grid.append(row)
 
     return np.array(grid)
@@ -96,4 +96,4 @@ def encode_state(tiling, state):
             grid_encoding.append(vectorize_digital(coding, len(axis)))
         tiling_encoding.append(grid_encoding)
 
-    return tiling_encoding
+    return np.array(tiling_encoding)
