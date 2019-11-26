@@ -20,3 +20,4 @@ agents = du.initialize_agent_list(fi, [layout_x, layout_y])
 
 # create an environment
 env = gym.make('marl_env:marl-farm-v0', fi=fi, agents=agents)
+
