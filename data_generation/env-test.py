@@ -30,7 +30,7 @@ offsets_list = [(-5, -5, -5), (0,0,0), (5, 5, 5)]
 
 test_tiling = du.create_tiling(lower_bounds, upper_bounds, bins_list, offsets_list)
 
-test_state = (25, 25, 25)
+test_state = (-25, -25, -25)
 
 test_encoding = du.encode_state(test_tiling, test_state)
 

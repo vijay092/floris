@@ -54,7 +54,7 @@ def create_tiling(lower_bounds, upper_bounds, bins_list, offsets_list):
 
     Returns a numpy array of grids
     """
-    if len(lower_bounds) != len(upper_bounds) or len(bins_list) != len(offsets_list) or len(bins_list) != len(lower_bounds):
+    if len(lower_bounds) != len(upper_bounds) or len(bins_list) != len(offsets_list):
         raise ValueError('Tiling dimensions do not agree')
 
     tiling = []
