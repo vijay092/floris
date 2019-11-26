@@ -5,6 +5,7 @@ import floris
 import floris.tools as wfct
 
 import distiag_utilities as du
+import numpy as np
 
 fi = wfct.floris_utilities.FlorisInterface("example_input.json")
 
@@ -21,3 +22,12 @@ agents = du.initialize_agent_list(fi, [layout_x, layout_y])
 # create an environment
 env = gym.make('marl_env:marl-farm-v0', fi=fi, agents=agents)
 
+lower_bounds = [-30, -30, -30]
+upper_bounds = [30, 30, 30]
+bins = (100, 100, 100)
+bins_list = [bins, bins, bins]
+offsets_list = [(-5, -5, -5), (0,0,0), (5, 5, 5)]
+
+test_tiling = du.create_tiling(lower_bounds, upper_bounds, bins_list, offsets_list)
+
+print(np.shape(test_tiling))
