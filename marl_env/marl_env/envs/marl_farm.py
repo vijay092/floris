@@ -19,6 +19,10 @@ class FarmMARL(gym.Env):
         self.fi = fi
         self.agents = agents
         self.yaw_angles = [0 for agent in agents]
+
+        self.yaw_lower_limit = -30
+        self.yaw_upper_limit = 30
+
         self.farm_power = self._calculate_farm_power()
 
         self.turbine_rated_power = 5
@@ -29,8 +33,10 @@ class FarmMARL(gym.Env):
         # possible action choices
         self.action_space = gym.spaces.Discrete(3**self.N)
         
-        # technically this should range from -30 to 30, but 
-        self.observation_space = gym.spaces.Discrete(60)
+        # technically this should range from -30 to 30, but only positive numbers are allowed
+        turbine_obs_space = gym.spaces.Discrete(60)
+
+        self.observation_space = gym.spaces.Tuple((turbine_obs_space, turbine_obs_space, turbine_obs_space))
 
     def step(self, action):
         """
@@ -44,6 +50,10 @@ class FarmMARL(gym.Env):
 
         # updated yaw angles: delta will be -1, 0, or 1
         new_yaw_angles = [yaw_angle + delta for (yaw_angle, delta) in zip(self.yaw_angles, deltas)]
+
+        # make sure yaw angles do not exceed limits
+        new_yaw_angles = [max(self.yaw_lower_limit, yaw_angle) for yaw_angle in new_yaw_angles]
+        new_yaw_angles = [min(self.yaw_upper_limit, yaw_angle) for yaw_angle in new_yaw_angles]
 
         # calculate the wakes due to the new yaw angles (this consitutes the actual "step")
         self.fi.calculate_wake(yaw_angles=new_yaw_angles)
