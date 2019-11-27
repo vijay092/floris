@@ -78,6 +78,12 @@ class FarmMARL(gym.Env):
         else:
             done = False
 
+            # reward clipping
+            if new_farm_power > self.farm_power:
+                reward = 1
+            elif new_farm_power < self.farm_power:
+                reward = -1
+
         # reset the internally tracked farm power level
         self.farm_power = new_farm_power
 
