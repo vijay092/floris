@@ -38,4 +38,15 @@ test_state = (-25, -25, -25)
 
 test_encoding = util.encode_state(test_tiling, test_state)
 
+q_table = sarsa.create_q_table(env)
+
+state = env.reset()
+
+action = sarsa.select_action(q_table[state], 'epsilon', epsilon=0.8)
+
+outputs = env.step(action)
+print("Initial state:", state)
+print("Action:", action)
+print("Next state:", outputs[0])
+
 print(np.shape(sarsa.create_q_table(env)))
