@@ -15,7 +15,7 @@ class FarmMARL(gym.Env):
     representing wind turbines can interact.
     """
     metadata = {'render.modes': ['human']}
-    def __init__(self, fi, agents, limits):
+    def __init__(self, fi, agents, limits, iterations):
         self.fi = fi
         self.agents = agents
         self.yaw_angles = [0 for agent in agents]
@@ -40,6 +40,11 @@ class FarmMARL(gym.Env):
         turbine_obs_space = gym.spaces.Discrete((limits[1]-limits[0]+1))
 
         self.observation_space = gym.spaces.Tuple((turbine_obs_space, turbine_obs_space, turbine_obs_space))
+
+        # number of iterations to run the simulation for, since the environment otherwise lacks a 
+        # suitable stopping condition
+        self.iterations = iterations
+        self.current_iteration = 0
 
     def step(self, action):
         """
@@ -71,21 +76,28 @@ class FarmMARL(gym.Env):
         reward = new_farm_power - self.farm_power
 
         # threshold is 1% of the rated power of the entire wind farm 
-        threshold = self.N * self.turbine_rated_power * 0.01
+        threshold = self.N * self.turbine_rated_power * 0.001
 
-        if new_farm_power - self.farm_power < threshold:
+        # if new_farm_power - self.farm_power < threshold:  
+        #     # if the change is not significant, return 0 reward
+        #     reward = 0
+        if new_farm_power > self.farm_power:
+            # positive reward clipping
+            reward = 1
+        elif new_farm_power < self.farm_power:
+            # negative reward clipping
+            reward = -1
+
+        # reset the internally tracked farm power level
+        self.farm_power = new_farm_power
+
+        if self.current_iteration >= self.iterations:
             done = True
         else:
             done = False
 
-            # reward clipping
-            if new_farm_power > self.farm_power:
-                reward = 1
-            elif new_farm_power < self.farm_power:
-                reward = -1
-
-        # reset the internally tracked farm power level
-        self.farm_power = new_farm_power
+        # advance internal iteration counter
+        self.current_iteration += 1
 
         # the state of the wind farm is obtained by considering the turbines in aggregate
         return [self._yaw_angle_to_state(self.yaw_angles), reward, done, None]
