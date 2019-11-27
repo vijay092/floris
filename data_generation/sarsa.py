@@ -2,7 +2,7 @@ import numpy as np
 
 def select_action(q_row, method, epsilon=0.5):
     """
-    Method based on Lecture Exercise 22: Reinforcement Learning
+    Method taken from Lecture Exercise 22: Reinforcement Learning
     """
     if method not in ["random", "epsilon"]:
         raise NameError("Undefined method.")
@@ -23,6 +23,7 @@ def select_action(q_row, method, epsilon=0.5):
 def create_q_table(env):
     """
     Create a Q-table with the correct dimensions
+    Method based on Lecture Exercise 22: Reinforcement Learning
     """
     dims = []
 
@@ -33,3 +34,15 @@ def create_q_table(env):
 
     return np.zeros(tuple(dims))
 
+def sarsa_update(q_table, state_indices, action, reward, next_state_indices, alpha, gamma, epsilon):
+    """
+    Method based on Lecture Exercise 22: Reinforcement Learning
+    """
+    Q_s_a = q_table[state_indices, action]
+
+    # Sarsa is on-policy, and does not use greedy value maximization to select the next action
+    next_action = select_action(q_table[next_state_indices], 'epsilon', epsilon)
+
+    Q_s_1_a = q_table[next_state_indices, next_action]
+
+    return (1-alpha)*Q_s_a + alpha*(reward + gamma * Q_s_1_a)

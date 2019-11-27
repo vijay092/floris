@@ -49,7 +49,7 @@ class FarmMARL(gym.Env):
             x = x % 3**(self.N - (i+1))
 
         # updated yaw angles: delta will be -1, 0, or 1
-        new_yaw_angles = [yaw_angle + delta for (yaw_angle, delta) in zip(self.yaw_angles, deltas)]
+        new_yaw_angles = [int(yaw_angle + delta) for (yaw_angle, delta) in zip(self.yaw_angles, deltas)]
 
         # make sure yaw angles do not exceed limits
         new_yaw_angles = [max(self.yaw_lower_limit, yaw_angle) for yaw_angle in new_yaw_angles]
