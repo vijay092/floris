@@ -21,7 +21,7 @@ class FarmMARL(gym.Env):
         self.yaw_angles = [0 for agent in agents]
 
         self.yaw_lower_limit = -30
-        self.yaw_upper_limit = 30
+        self.yaw_upper_limit = 29
 
         self.farm_power = self._calculate_farm_power()
 
