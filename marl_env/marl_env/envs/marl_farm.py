@@ -29,9 +29,12 @@ class FarmMARL(gym.Env):
 
         self.N = len(agents)
 
+        # number of actions that each turbine can take
+        self.num_actions = 3
+
         # there are three actions: decrease 1 deg, stay, and increase 1 deg for each turbine, so 3^N
         # possible action choices
-        self.action_space = gym.spaces.Discrete(3**self.N)
+        self.action_space = gym.spaces.Discrete(self.num_actions**self.N)
         
         # technically this should range from -30 to 30, but only positive numbers are allowed
         turbine_obs_space = gym.spaces.Discrete((limits[1]-limits[0]+1))
@@ -45,8 +48,8 @@ class FarmMARL(gym.Env):
         deltas = [None for agent in self.agents]
         x = action
         for i,_ in enumerate(self.agents):
-            deltas[i] = (x % 3**(self.N - (i+1)) ) - 1
-            x = x % 3**(self.N - (i+1))
+            deltas[i] = (x // self.num_actions**(self.N - (i+1)) ) - 1
+            x = x % self.num_actions**(self.N - (i+1))
 
         # updated yaw angles: delta will be -1, 0, or 1
         new_yaw_angles = [int(yaw_angle + delta) for (yaw_angle, delta) in zip(self.yaw_angles, deltas)]
