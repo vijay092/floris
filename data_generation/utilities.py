@@ -96,4 +96,6 @@ def encode_state(tiling, state):
             grid_encoding.append(_vectorize_digital(coding, len(axis)))
         tiling_encoding.append(grid_encoding)
 
-    return np.array(tiling_encoding)
+    tiling_encoding = np.array(tiling_encoding)
+
+    return np.array( np.ndarray.flatten(tiling_encoding) )
