@@ -79,7 +79,14 @@ class FarmMARL(gym.Env):
         self.farm_power = new_farm_power
 
         # the state of the wind farm is obtained by considering the turbines in aggregate
-        return [self.yaw_angles, reward, done, None]
+        return [self._yaw_angle_to_state(self.yaw_angles), reward, done, None]
+
+    def _yaw_angle_to_state(self, yaw_angles):
+        """
+        Converts an array of yaw angles to a tuple of indices in the observation space
+        """
+        states = [yaw_angle - self.yaw_lower_limit for yaw_angle in yaw_angles]
+        return tuple(states)
 
     def _calculate_farm_power(self):
         return sum([agent.turbine.power for agent in self.agents])
@@ -126,7 +133,7 @@ class FarmMARL(gym.Env):
         self.yaw_angles = [0 for agent in self.agents]
         self.fi.calculate_wake(self.yaw_angles)
         self.values = [agent.turbine.power for agent in self.agents]
-        return
+        return self._yaw_angle_to_state(self.yaw_angles)
 
     def render(self, mode='human', close=False):
         return
