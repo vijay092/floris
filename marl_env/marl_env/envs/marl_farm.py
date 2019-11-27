@@ -15,13 +15,13 @@ class FarmMARL(gym.Env):
     representing wind turbines can interact.
     """
     metadata = {'render.modes': ['human']}
-    def __init__(self, fi, agents):
+    def __init__(self, fi, agents, limits):
         self.fi = fi
         self.agents = agents
         self.yaw_angles = [0 for agent in agents]
 
-        self.yaw_lower_limit = -30
-        self.yaw_upper_limit = 29
+        self.yaw_lower_limit = limits[0]
+        self.yaw_upper_limit = limits[1]
 
         self.farm_power = self._calculate_farm_power()
 
@@ -34,7 +34,7 @@ class FarmMARL(gym.Env):
         self.action_space = gym.spaces.Discrete(3**self.N)
         
         # technically this should range from -30 to 30, but only positive numbers are allowed
-        turbine_obs_space = gym.spaces.Discrete(60)
+        turbine_obs_space = gym.spaces.Discrete((limits[1]-limits[0]+1))
 
         self.observation_space = gym.spaces.Tuple((turbine_obs_space, turbine_obs_space, turbine_obs_space))
 

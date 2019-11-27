@@ -4,7 +4,8 @@ import marl_env
 import floris
 import floris.tools as wfct
 
-import distiag_utilities as du
+import utilities as util
+import sarsa
 import numpy as np
 
 fi = wfct.floris_utilities.FlorisInterface("example_input.json")
@@ -17,10 +18,13 @@ layout_y = [0, 0, 0]
 fi.reinitialize_flow_field(layout_array=[layout_x, layout_y])
 fi.calculate_wake()
 # create a list of agents that is assembled using the FlorisUtilities object
-agents = du.initialize_agent_list(fi, [layout_x, layout_y])
+agents = util.initialize_agent_list(fi, [layout_x, layout_y])
+
+# lower and upper yaw limits
+limits = [-30, 29]
 
 # create an environment
-env = gym.make('marl_env:marl-farm-v0', fi=fi, agents=agents)
+env = gym.make('marl_env:marl-farm-v0', fi=fi, agents=agents, limits=limits)
 
 lower_bounds = [-30, -30, -30]
 upper_bounds = [30, 30, 30]
@@ -28,10 +32,10 @@ bins = (100, 100, 100)
 bins_list = [bins, bins, bins]
 offsets_list = [(-5, -5, -5), (0,0,0), (5, 5, 5)]
 
-test_tiling = du.create_tiling(lower_bounds, upper_bounds, bins_list, offsets_list)
+test_tiling = util.create_tiling(lower_bounds, upper_bounds, bins_list, offsets_list)
 
 test_state = (-25, -25, -25)
 
-test_encoding = du.encode_state(test_tiling, test_state)
+test_encoding = util.encode_state(test_tiling, test_state)
 
-print(np.shape(np.ndarray.flatten(test_encoding)))
+print(np.shape(sarsa.create_q_table(env)))
