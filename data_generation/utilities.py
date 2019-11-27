@@ -65,7 +65,7 @@ def create_tiling(lower_bounds, upper_bounds, bins_list, offsets_list):
 
     return np.array(tiling)
 
-def vectorize_digital(bin, dim):
+def _vectorize_digital(bin, dim):
     """
     Write a digital bin number as a boolean array
 
@@ -93,7 +93,7 @@ def encode_state(tiling, state):
         grid_encoding = []
         for i,axis in enumerate(grid):
             coding = np.digitize(state[i], axis)
-            grid_encoding.append(vectorize_digital(coding, len(axis)))
+            grid_encoding.append(_vectorize_digital(coding, len(axis)))
         tiling_encoding.append(grid_encoding)
 
     return np.array(tiling_encoding)

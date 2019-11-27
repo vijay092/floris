@@ -1,4 +1,5 @@
 import numpy as np
+import utilities as utils
 
 def select_action(q_row, method, epsilon=0.5):
     """
@@ -46,3 +47,46 @@ def sarsa_update(q_table, state_indices, action, reward, next_state_indices, alp
     Q_s_1_a = q_table[next_state_indices, next_action]
 
     return (1-alpha)*Q_s_a + alpha*(reward + gamma * Q_s_1_a)
+
+def generate_trajectory(env, params, tiling):
+    """
+    Create a trajectory of state, next_state, and reward in np arrays
+    """
+
+    q_table = create_q_table(env)
+
+    state = env.reset()
+
+    done = False
+    
+    method = params['method']
+    epsilon = params['epsilon']
+    alpha = params['alpha']
+    gamma = params['gamma']
+
+    # output array for diagnostic purposes
+    power = []
+    states = []
+    rewards = []
+    next_states = []
+
+    counter = 0
+    while not done:
+        action = action = select_action(q_table[state], method=method, epsilon=epsilon)
+
+        [next_state, reward, done, misc] = env.step(action)
+
+        q_table[state, action] = sarsa_update(q_table, state, action, reward, next_state, alpha, gamma, epsilon)
+
+        power.append( sum([turbine.power for turbine in env.fi.floris.farm.turbines]) )
+
+        states.append( utils.encode_state(tiling, state) )
+        rewards.append( reward )
+        next_states.append( utils.encode_state(tiling, next_state) )
+
+        state = next_state
+
+        if (counter + 1) % 100 == 0:
+            print("Simulation iteration:", counter)
+
+    return [states, rewards, next_states, power]
