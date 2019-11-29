@@ -23,9 +23,10 @@ def algo_preprocess(data):
         phi_gamma_phi_next[:,i] = phi[:,i] - data.gamma*phi_next[:,i]
 
     reward_phi = np.zeros((d,1))
-
+    
     for i in range(n):
-        reward_phi = reward_phi + data.rewards[i]*phi[:,i]
+        reward_phi = reward_phi + np.reshape(data.rewards[i]*phi[:,i], (d,1))
+        
 
     return [phi, phi_gamma_phi_next, reward_phi]
 
@@ -60,17 +61,20 @@ def run_pd_distiag(training_data, initial_theta, initial_w, rho, M, sigma_theta,
     phi_gamma_phi_next = outputs[1]
     reward_phi = outputs[2]
 
-    A = matmul(phi, transpose(phi_gamma_phi_next)) / n
+    A = matmul(phi, phi_gamma_phi_next.T) / n
     b = reward_phi/n
-    C = matmul(phi, transpose(phi)) / n
+    C = matmul(phi, phi.T) / n
     C_inv = np.linalg.pinv(C)
 
-    B = rho*np.identity(d) + np.matmul(np.transpose(A), np.matmul(C_inv, b) )
+    B = rho*np.identity(d) + matmul(A.T, matmul(C_inv, b) )
 
+    theta_opt = matmul(np.linalg.pinv(B), matmul(A.T, matmul(C_inv,b) ) )
+    obj_opt = matmul( matmul( (matmul(A,theta_opt) - b).T, C_inv), (matmul(A, theta_opt)-b) ) + rho*np.linalg.norm(theta_opt)**2
+    
     N = len(agent_dict)
 
     [reward_N, W_G] = split_reward(data, N, agent_dict)
-    print(W_G)
+    
     theta_N = initial_theta
     w_N = initial_w
 
@@ -86,14 +90,24 @@ def run_pd_distiag(training_data, initial_theta, initial_w, rho, M, sigma_theta,
     for i in range(M):
         indices = np.random.permutation(n)
         for k in indices:
-            print(type(k))
             theta_grad_cur = np.zeros((d,N))
             w_grad_cur = np.zeros((d,N))
 
             for nn in range(N):
-                print(type(nn))
-                theta_grad_cur[:,nn] = rho*theta_N[:,nn] - matmul(phi_gamma_phi_next[:,k], matmul(transpose(phi[:,k]), w_N[:,nn]))
-                w_grad_cur[:,nn] = matmul(phi[:,k], matmul(transpose(-phi_gamma_phi_next[:,k]))), theta_N[:,nn] + reward_N[k,nn] - matmul(transpose(phi[:,k]), w_N[:,nn])
+                theta_grad_cur[:,nn] = rho*theta_N[:,nn] - matmul(np.outer(phi_gamma_phi_next[:,k], phi[:,k]), w_N[:,nn])
+                w_grad_cur[:,nn] = matmul(np.outer(phi[:,k], -phi_gamma_phi_next[:,k]), theta_N[:,nn]) + reward_N[k,nn] - matmul(phi[:,k], w_N[:,nn])
 
-            #s_theta_avg =   
+            s_theta_avg = matmul(s_theta_avg, W_G) + theta_grad_cur/n - theta_grad_old[:,:,k]/n
+            d_w_avg = d_w_avg + w_grad_cur/n - w_grad_old[:,:,k]/n
+
+            theta_grad_old[:,:,k] = theta_grad_cur
+            w_grad_old[:,:,k] = w_grad_cur
+
+            theta_N = matmul(theta_N, W_G) - sigma_theta*s_theta_avg
+            w_N = w_N + sigma_w*d_w_avg
+
+        for nn in range(N):
+            theta_N_col = np.reshape(theta_N[:,nn], (d,1))
+            obj[i,nn] = matmul( matmul( (matmul(A, theta_N_col) - b).T, C_inv), (matmul(A, theta_N_col) - b) ) + rho*np.linalg.norm(theta_N_col)**2 - obj_opt
+        
     return None

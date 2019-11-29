@@ -26,7 +26,7 @@ agents = utils.initialize_agent_list(fi, [layout_x, layout_y])
 # lower and upper yaw limits
 limits = [-30, 29]
 
-iterations = 100#85000
+iterations = 85000
 
 # create an environment
 env = gym.make('marl_env:marl-farm-v0', fi=fi, agents=agents, limits=limits, iterations=iterations)
@@ -57,6 +57,7 @@ dir_path = os.path.dirname(os.getcwd())
 np.save('states', outputs[0])
 np.save('rewards', outputs[1])
 np.save('next_states', outputs[2])
+np.save('power', outputs[-1])
 
 agent_dict = {agent.alias: agent.coordinates for agent in agents}
 
