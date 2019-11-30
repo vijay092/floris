@@ -87,7 +87,10 @@ def run_pd_distiag(training_data, initial_theta, initial_w, rho, M, sigma_theta,
     s_theta_avg = np.sum(theta_grad_old, axis=2) / n
     d_w_avg = np.sum(w_grad_old, axis=2) / n
 
+    avg_obj = []
+
     for i in range(M):
+        print(i)
         indices = np.random.permutation(n)
         for k in indices:
             theta_grad_cur = np.zeros((d,N))
@@ -110,4 +113,6 @@ def run_pd_distiag(training_data, initial_theta, initial_w, rho, M, sigma_theta,
             theta_N_col = np.reshape(theta_N[:,nn], (d,1))
             obj[i,nn] = matmul( matmul( (matmul(A, theta_N_col) - b).T, C_inv), (matmul(A, theta_N_col) - b) ) + rho*np.linalg.norm(theta_N_col)**2 - obj_opt
         
-    return None
+        avg_obj.append(np.mean(obj[i,:]))
+
+    return [np.array(avg_obj)]
