@@ -29,7 +29,7 @@ fi.reinitialize_flow_field(layout_array=[layout_x, layout_y])
 
 dir_path = os.path.dirname( os.getcwd() )
 
-yaw_angles_path = dir_path + "\\data_generation\\yaw_angles_300_new.npy"
+yaw_angles_path = dir_path + "\\data_generation\\data\\yaw_angles_300_new.npy"
 yaw_angles = np.load(yaw_angles_path) - 30
 
 # Calculate wake
