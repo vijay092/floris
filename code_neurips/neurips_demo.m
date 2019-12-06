@@ -8,9 +8,9 @@ addpath('./tools/')
 % "Stochastic Variance Reduction Methods for Policy Evaluation", ICML 2017.
 
 % read data (it's actually Sarsa/Mountaincar data)
-data.phi = csvread('./state_wf_300.csv')';
-data.phi_next = csvread('./nextstate_wf_300.csv')';
-data.rewards = csvread('./reward_wf_300.csv');
+data.phi = csvread('./data/state_wf_300.csv')';
+data.phi_next = csvread('./data/nextstate_wf_300.csv')';
+data.rewards = csvread('./data/reward_wf_300.csv');
 data.gamma = 0.95;
 
 %Training
