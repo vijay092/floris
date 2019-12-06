@@ -1,3 +1,21 @@
+Instructions for use:
+
+This code builds on NREL's FLORIS package which this repo is forked from. To use:
+
+Create a virtual environment
+
+Clone into a directory.
+
+`pip install -e floris`
+
+`cd floris` 
+
+`pip install gym`
+
+`pip install -e marl_env'
+
+Data is created in the `data_generation` folder. Run `generate_data.py` to generate a variety of files relating to state, reward, etc. Some sample files are provided in the `data` folder which must be extracted first. To run the algorithm, run `neurips_demo.m` in the `code_neurips` folder. Sample state trajectories are also provided in the `data` folder which must be extracted first. New csv data can be transferred from the `data_generation` folder to the `code_neurips/data` folder if desired. The `code_neurips` folder is taken from code published at http://www1.se.cuhk.edu.hk/~htwai/pub.html in the paper Multi-Agent Reinforcement Learning via Double Averaging Primal-Dual Optimization. Below is the original README file associated with FLORIS.
+
 FLORIS Wake Modeling Utility
 ----------------------------
 
