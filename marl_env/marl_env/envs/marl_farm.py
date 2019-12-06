@@ -55,7 +55,6 @@ class FarmMARL(gym.Env):
         for i,_ in enumerate(self.agents):
             deltas[i] = (x // self.num_actions**(self.N - (i+1)) ) - 1
             x = x % self.num_actions**(self.N - (i+1))
-
         # updated yaw angles: delta will be -1, 0, or 1
         new_yaw_angles = [int(yaw_angle + delta) for (yaw_angle, delta) in zip(self.yaw_angles, deltas)]
 
@@ -151,6 +150,7 @@ class FarmMARL(gym.Env):
         return downwind_agents[temp_index]
 
     def reset(self):
+        self.current_iteration = 0
         self.yaw_angles = [0 for agent in self.agents]
         self.fi.calculate_wake(self.yaw_angles)
         self.values = [agent.turbine.power for agent in self.agents]

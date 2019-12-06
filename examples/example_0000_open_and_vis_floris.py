@@ -11,14 +11,29 @@
 
 # See read the https://floris.readthedocs.io for documentation
 
+# This example code was modified to print out the wind farm layout that I will be using for the project.
+
 import matplotlib.pyplot as plt
 import floris.tools as wfct
+import os
+import numpy as np
 
 # Initialize the FLORIS interface fi
 fi = wfct.floris_utilities.FlorisInterface("example_input.json")
 
+D = fi.floris.farm.turbines[0].rotor_diameter
+layout_x = [0, 7*D, 14*D]
+layout_y = [0, 0, 0]
+
+fi.reinitialize_flow_field(layout_array=[layout_x, layout_y])
+
+dir_path = os.path.dirname( os.getcwd() )
+
+yaw_angles_path = dir_path + "\\data_generation\\yaw_angles_300_new.npy"
+yaw_angles = np.load(yaw_angles_path) - 30
+
 # Calculate wake
-fi.calculate_wake()
+fi.calculate_wake(yaw_angles=yaw_angles[-1])
 
 # Initialize the horizontal cut
 hor_plane = wfct.cut_plane.HorPlane(

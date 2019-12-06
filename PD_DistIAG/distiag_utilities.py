@@ -42,8 +42,8 @@ def split_reward(data, N, agent_dict):
         for nn in range(N):
             reward_N[i,nn] = data.rewards[i] * (num_turbines-nn) * (1/6)
 
-    #W_G = np.ones((num_turbines, num_turbines))
-    W_G = np.identity(num_turbines)
+    W_G = np.ones((num_turbines, num_turbines))
+    #W_G = np.identity(num_turbines)
 
     return [reward_N, W_G]
 
@@ -113,6 +113,9 @@ def run_pd_distiag(training_data, initial_theta, initial_w, rho, M, sigma_theta,
             theta_N_col = np.reshape(theta_N[:,nn], (d,1))
             obj[i,nn] = matmul( matmul( (matmul(A, theta_N_col) - b).T, C_inv), (matmul(A, theta_N_col) - b) ) + rho*np.linalg.norm(theta_N_col)**2 - obj_opt
         
+            if np.isnan(obj[i,nn]):
+                obj[i,nn] = matmul( (matmul(A, theta_N_col) - b).T, (matmul(A, theta_N_col) - b) ) + rho*np.linalg.norm(theta_N_col)**2 
+
         avg_obj.append(np.mean(obj[i,:]))
 
     return [np.array(avg_obj)]

@@ -48,12 +48,52 @@ def sarsa_update(q_table, state_indices, action, reward, next_state_indices, alp
 
     return (1-alpha)*Q_s_a + alpha*(reward + gamma * Q_s_1_a)
 
-def generate_trajectory(env, params, tiling):
+def train_farm(env, params):
+    """
+    Train the wind farm Q-table to be used to generate a state trajectory
+
+    Returns the filled Q-table.
+    """
+
+    # output array for diagnostic purposes
+    power = []
+    unencoded_states = []
+
+    q_table = create_q_table(env)
+
+    state = env.reset()
+
+    done = False
+    
+    method = params['method']
+    epsilon = params['epsilon']
+    alpha = params['alpha']
+    gamma = params['gamma']
+
+    counter = 0
+    while not done:
+        action = action = select_action(q_table[state], method=method, epsilon=epsilon)
+        
+        [next_state, reward, done, misc] = env.step(action)
+
+        q_table[state][action] = sarsa_update(q_table, state, action, reward, next_state, alpha, gamma, epsilon)
+
+        power.append( sum([turbine.power for turbine in env.fi.floris.farm.turbines]) )
+        unencoded_states.append(state)
+
+        state = next_state
+
+        if (counter + 1) % 100 == 0:
+            print("Simulation iteration:", counter+1)
+
+        counter += 1
+
+    return [q_table, power, unencoded_states]
+
+def generate_trajectory(env, params, tiling, q_table):
     """
     Create a trajectory of state, next_state, and reward in np arrays
     """
-
-    q_table = create_q_table(env)
 
     state = env.reset()
 
