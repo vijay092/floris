@@ -88,8 +88,8 @@ with open('agents.pickle', 'wb') as handle:
     pickle.dump(agent_dict, handle)
 
 # save data as text files
-np.savetxt("state_wf_new_300.csv", outputs[0], delimiter=',')
-np.savetxt("nextstate_wf_new_300.csv", outputs[2], delimiter=',')
-np.savetxt("reward_wf_new_300.csv", outputs[1], delimiter=',')
+np.savetxt("state_wf_300.csv", outputs[0], delimiter=',')
+np.savetxt("nextstate_wf_300.csv", outputs[2], delimiter=',')
+np.savetxt("reward_wf_300.csv", outputs[1], delimiter=',')
 
 plt.show()
