@@ -22,6 +22,7 @@ from scipy.interpolate import interp1d
 
 from ..utilities import cosd, sind, tand
 from ..logging_manager import LoggerBase
+from .wind_field_buffer import WindFieldBuffer
 
 
 class Turbine(LoggerBase):
@@ -101,6 +102,8 @@ class Turbine(LoggerBase):
             self.use_points_on_perimeter = False
 
         self._initialize_turbine()
+
+        self.send_wake = False
 
     # Private methods
 

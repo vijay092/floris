@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import norm
 
 from floris.simulation import Floris, Turbine, WindMap, TurbineMap
+from floris.simulation.wind_field_buffer import WindFieldBuffer
 
 from .cut_plane import CutPlane, get_plane_from_flow_data
 from .flow_data import FlowData
@@ -63,8 +64,21 @@ class FlorisInterface(LoggerBase):
         self.input_file = input_file
         self.floris = Floris(input_file=input_file, input_dict=input_dict)
 
+        self.wind_speed_change = (False, 0.0)
+        self.wind_dir_change = (False, 270.0)
+
+        # initialize to zero, will be updated in reinitialize_flow_field
+        self.wind_dir_shift = 0
+        self.wind_dir_change_turb = [False for _ in self.floris.farm.turbines] # keeps track of when the wind direction shifts
+        # make sure that each turbine has a WindFieldBuffer object
+        for i,turbine in enumerate(self.floris.farm.turbines):
+            if not hasattr(turbine, 'wind_field_buffer'):
+                turbine.wind_field_buffer = WindFieldBuffer(self.floris.farm.flow_field.wake.combination_function, len(self.floris.farm.turbines))
+            if not hasattr(turbine, 'number'):
+                turbine.number = i
+
     def calculate_wake(
-        self, yaw_angles=None, no_wake=False, points=None, track_n_upstream_wakes=False
+        self, yaw_angles=None, no_wake=False, points=None, track_n_upstream_wakes=False, sim_time=None
     ):
         """
         Wrapper to the :py:meth:`~.Farm.set_yaw_angles` and
@@ -83,13 +97,58 @@ class FlorisInterface(LoggerBase):
                 track of the number of upstream wakes a turbine is
                 experiencing. Defaults to *False*.
         """
+
+        prev_yaw_angles = [turbine.yaw_angle for turbine in self.floris.farm.turbines]
+
         if yaw_angles is not None:
-            self.floris.farm.set_yaw_angles(yaw_angles)
+            for i,yaw_angle in enumerate(yaw_angles):
+                if yaw_angle is None:
+                    yaw_angles[i] = prev_yaw_angles[i]
+            if sim_time is not None:
+                # keep track of previous yaw angles
+                #print(prev_yaw_angles)
+                #print(yaw_angles)
+                # this list keeps track of which yaw angles have changed
+                angle_changes = [not prev==now for prev,now in zip(prev_yaw_angles, yaw_angles)]
+                for i,turbine in enumerate(self.floris.farm.turbines):
+                    turbine.send_wake = angle_changes[i]
+                self.floris.farm.set_yaw_angles(yaw_angles)
+                #print(angle_changes)
+                #if any(angle_changes): print(angle_changes)
+                # self.wind_dir_change is set in reinitialize_flow_field
+                # if self.wind_dir_change is not None and self.wind_dir_change[0]:
+                #     self.floris.farm.flow_field.propagate_wind_directions(self.wind_dir_change[1], sim_time)
+                # if self.wind_speed_change is not None and self.wind_speed_change[0]:
+                #     self.floris.farm.flow_field.propagate_wind_speeds(self.wind_speed_change[1], sim_time)
+            else:
+                self.floris.farm.set_yaw_angles(yaw_angles)
+
+        input_speed = []
+        wind_map = self.floris.farm.wind_map
+
+        for i, turbine in enumerate(self.floris.farm.turbines):
+            if len(wind_map.input_speed) == 1:
+                wind_speed = wind_map.input_speed[0]
+            else:
+                wind_speed = wind_map.input_speed[i]
+
+            (wind_speed, turbine.send_wake) = turbine.wind_field_buffer.get_wind_speed(wind_speed, turbine.send_wake, sim_time)
+
+            input_speed.append(wind_speed)
+
+        if sim_time is not None:
+            self.reinitialize_flow_field(wind_speed=input_speed)
+            # wind_map.input_speed = input_speed
+            # wind_map.calculate_wind_speed()
+            print("Input speed:", input_speed)
+            # if yaw_angles is not None:
+            #     self.floris.farm.set_yaw_angles(yaw_angles)
 
         self.floris.farm.flow_field.calculate_wake(
             no_wake=no_wake,
             points=points,
             track_n_upstream_wakes=track_n_upstream_wakes,
+            sim_time=sim_time
         )
 
     def reinitialize_flow_field(
@@ -106,6 +165,7 @@ class FlorisInterface(LoggerBase):
         wake=None,
         layout_array=None,
         with_resolution=None,
+        sim_time=None
     ):
         """
         Wrapper to :py:meth:`~.flow_field.reinitialize_flow_field`. All input
@@ -168,6 +228,8 @@ class FlorisInterface(LoggerBase):
                 wind_speed = (
                     wind_speed if isinstance(wind_speed, list) else [wind_speed]
                 )
+                if not isinstance(wind_speed, list) and sim_time is not None: 
+                    self.wind_speed_change = (True, self.floris.farm.wind_map.input_speed)
             if wind_direction is None:
                 wind_direction = wind_map.input_direction
             else:
@@ -201,6 +263,9 @@ class FlorisInterface(LoggerBase):
 
                 # If not a list, convert to list
                 # TODO: What if tuple? Or
+                if not isinstance(wind_speed, list) and sim_time is not None: 
+                    self.wind_speed_change = (True, self.floris.farm.wind_map.input_speed)
+                    self.floris.farm.flow_field.propagate_wind_speeds(self.floris.farm.wind_map.input_speed, wind_speed, sim_time)
                 wind_speed = (
                     wind_speed if isinstance(wind_speed, list) else [wind_speed]
                 )
@@ -243,6 +308,9 @@ class FlorisInterface(LoggerBase):
             with_resolution=with_resolution,
             wind_map=self.floris.farm.wind_map,
         )
+
+        for turbine in self.floris.farm.turbines:
+            print(turbine.number)
 
     def get_plane_of_points(
         self,

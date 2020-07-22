@@ -88,6 +88,8 @@ fi.calculate_wake()
 plot_slice_shortcut(fi, axarr[7], "Change layout")
 wfct.visualization.plot_turbines_with_fi(axarr[7], fi)
 
+fi.reinitialize_flow_field(wind_speed=7.0, sim_time=0)
+
 # Changes the yaw angles
 fi.calculate_wake(yaw_angles=[25, 10])
 plot_slice_shortcut(fi, axarr[8], "Change yaw angles")
