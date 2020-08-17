@@ -16,7 +16,7 @@
 import matplotlib.pyplot as plt
 import floris
 import floris.tools as wfct
-
+import numpy as np
 
 # Initialize the FLORIS interface fi
 # For basic usage, the florice interface provides a simplified interface to
@@ -31,7 +31,7 @@ hor_plane = fi.get_hor_plane()
 
 powers = []
 true_powers = []
-total_time = 15
+total_time = 30
 
 fi.reinitialize_flow_field(wind_speed=10)
 fi.calculate_wake()
@@ -39,27 +39,31 @@ true_power = fi.get_farm_power()/1e6
 
 fi.reinitialize_flow_field(wind_speed=8)
 fi.calculate_wake()
+vel_1 =[]
+vel_2 =[]
 
-for sim_time in range(total_time):
+tspan = np.linspace(0,total_time,100);
+for sim_time in tspan:
 
     if sim_time == 0:
         fi.reinitialize_flow_field(wind_speed=10, sim_time=0)
 
     fi.calculate_wake(sim_time=sim_time)
+    vel_1.append(fi.floris.farm.turbines[0].average_velocity)
+    vel_2.append(fi.floris.farm.turbines[1].average_velocity)
 
-    powers.append(fi.get_farm_power()/1e6)
-    true_powers.append(true_power)
+
 
 # Plot and show
 fig, ax = plt.subplots()
 wfct.visualization.visualize_cut_plane(hor_plane, ax=ax)
-
+ 
 plt.figure()
 
-plt.plot(list(range(total_time)), powers, label="Dynamic")
-plt.plot(list(range(total_time)), true_powers, label="Steady-State")
+plt.plot(tspan, vel_1, label="First Row")
+plt.plot(tspan, vel_2, label="Second Row")
 plt.legend()
 plt.xlabel("Time (s)")
-plt.ylabel("Power (MW)")
+plt.ylabel("Velocity (m/s)")
 
 plt.show()
