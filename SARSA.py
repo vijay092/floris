@@ -45,7 +45,7 @@ class nnQ(pt.nn.Module):
         
     def forward(self,x,a):
         x = pt.tensor(x,dtype=pt.float32) # feature
-        a = pt.tensor(a, dtype=pt.int64)  # parametesw
+        a = pt.tensor(a, dtype=pt.int64)  # parameter
         b = pt.nn.functional.one_hot(a,self.numActions)
         c = b.float().detach()
         y = pt.cat([x,c])

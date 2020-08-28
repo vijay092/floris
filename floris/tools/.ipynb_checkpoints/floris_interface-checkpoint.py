@@ -140,7 +140,7 @@ class FlorisInterface(LoggerBase):
             self.reinitialize_flow_field(wind_speed=input_speed)
             # wind_map.input_speed = input_speed
             # wind_map.calculate_wind_speed()
-            print("Input speed:", input_speed)
+            #print("Input speed:", input_speed)
             # if yaw_angles is not None:
             #     self.floris.farm.set_yaw_angles(yaw_angles)
 
@@ -309,8 +309,8 @@ class FlorisInterface(LoggerBase):
             wind_map=self.floris.farm.wind_map,
         )
 
-        for turbine in self.floris.farm.turbines:
-            print(turbine.number)
+#         for turbine in self.floris.farm.turbines:
+#             print(turbine.number)
 
     def get_plane_of_points(
         self,
