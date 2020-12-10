@@ -83,8 +83,6 @@ class Turbine(LoggerBase):
         self.yaw_angle = properties["yaw_angle"]
         self.tilt_angle = properties["tilt_angle"]
         self.tsr = properties["TSR"]
-        self.ct = properties["Ct"]
-        self.cp = properties["Cp"]
         # initialize to an invalid value until calculated
         self.air_density = -1
         self.use_turbulence_correction = False
@@ -451,7 +449,7 @@ class Turbine(LoggerBase):
             >>> avg_vel = floris.farm.turbines[0].average_velocity()
         """
         # remove all invalid numbers from interpolation
-        print(np.where(~np.isnan(self.velocities)))
+        #print(np.where(~np.isnan(self.velocities)))
         data = self.velocities[np.where(~np.isnan(self.velocities))]
         #data = self.velocities;
         avg_vel = np.cbrt(np.mean(data ** 3))
@@ -483,8 +481,8 @@ class Turbine(LoggerBase):
         pW = self.pP / 3.0  # Convert from pP to pW
         yaw_effective_velocity = self.average_velocity * cosd(self.yaw_angle) ** pW
 
-        #return self._fCp(yaw_effective_velocity)
-        return self._fCp(1e3)
+        return self._fCp(yaw_effective_velocity)
+        #return self._fCp(1e3)
     @property
     def Ct(self):
         """
@@ -501,8 +499,8 @@ class Turbine(LoggerBase):
             To get the thrust coefficient value for a turbine:
             >>> Ct = floris.farm.turbines[0].Ct()
         """
-        #return self._fCt(self.average_velocity) * cosd(self.yaw_angle)  # **self.pP
-        return self._fCt(1e3)
+        return self._fCt(self.average_velocity) * cosd(self.yaw_angle)  # **self.pP
+        #return self._fCt(1e3)
     @property
     def power(self):
         """

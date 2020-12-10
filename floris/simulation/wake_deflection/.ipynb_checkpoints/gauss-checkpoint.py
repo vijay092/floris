@@ -1,15 +1,3 @@
-# Copyright 2020 NREL
-
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not
-# use this file except in compliance with the License. You may obtain a copy of
-# the License at http://www.apache.org/licenses/LICENSE-2.0
-
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations under
-# the License.
-
 import numpy as np
 
 from ...utilities import cosd, sind, tand
@@ -21,7 +9,6 @@ class Gauss(VelocityDeflection):
     The Gauss deflection model is a blend of the models described in
     :cite:`gdm-bastankhah2016experimental` and :cite:`gdm-King2019Controls` for
     calculating the deflection field in turbine wakes.
-
     References:
         .. bibliography:: /source/zrefs.bib
             :style: unsrt
@@ -44,12 +31,10 @@ class Gauss(VelocityDeflection):
     def __init__(self, parameter_dictionary):
         """
         Stores model parameters for use by methods.
-
         Args:
             parameter_dictionary (dict): Model-specific parameters.
                 Default values are used when a parameter is not included
                 in `parameter_dictionary`. Possible key-value pairs include:
-
                     -   **ka** (*float*): Parameter used to determine the linear
                         relationship between the turbulence intensity and the
                         width of the Gaussian wake shape.
@@ -100,7 +85,6 @@ class Gauss(VelocityDeflection):
         Calculates the deflection field of the wake. See
         :cite:`gdm-bastankhah2016experimental` and :cite:`gdm-King2019Controls`
         for details on the methods used.
-
         Args:
             x_locations (np.array): An array of floats that contains the
                 streamwise direction grid coordinates of the flow field
@@ -117,7 +101,6 @@ class Gauss(VelocityDeflection):
                 the coordinate of the turbine creating the wake (m).
             flow_field (:py:class:`floris.simulation.flow_field`): Object
                 containing the flow field information for the wind farm.
-
         Returns:
             np.array: Deflection field for the wake.
         """
@@ -145,7 +128,7 @@ class Gauss(VelocityDeflection):
         )
         # opposite sign convention in this model
         tilt = turbine.tilt_angle
-        Ct = turbine.ct
+        Ct = turbine.Ct
 
         # U_local = flow_field.wind_map.grid_wind_speed
         # just a placeholder for now, should be initialized with the flow_field
@@ -230,15 +213,11 @@ class Gauss(VelocityDeflection):
         """
         Parameter used to determine the linear relationship between the
         turbulence intensity and the width of the Gaussian wake shape.
-
         **Note:** This is a virtual property used to "get" or "set" a value.
-
         Args:
             value (float): Value to set.
-
         Returns:
             float: Value currently set.
-
         Raises:
             ValueError: Invalid value.
         """
@@ -265,15 +244,11 @@ class Gauss(VelocityDeflection):
         """
         Parameter used to determine the linear relationship between the
         turbulence intensity and the width of the Gaussian wake shape.
-
         **Note:** This is a virtual property used to "get" or "set" a value.
-
         Args:
             value (float): Value to set.
-
         Returns:
             float: Value currently set.
-
         Raises:
             ValueError: Invalid value.
         """
@@ -301,15 +276,11 @@ class Gauss(VelocityDeflection):
         Parameter that determines the dependence of the downstream boundary
         between the near wake and far wake region on the turbulence
         intensity.
-
         **Note:** This is a virtual property used to "get" or "set" a value.
-
         Args:
             value (float): Value to set.
-
         Returns:
             float: Value currently set.
-
         Raises:
             ValueError: Invalid value.
         """
@@ -338,15 +309,11 @@ class Gauss(VelocityDeflection):
         Parameter that determines the dependence of the downstream boundary
         between the near wake and far wake region on the turbine's
         induction factor.
-
         **Note:** This is a virtual property used to "get" or "set" a value.
-
         Args:
             value (float): Value to set.
-
         Returns:
             float: Value currently set.
-
         Raises:
             ValueError: Invalid value.
         """
@@ -374,17 +341,12 @@ class Gauss(VelocityDeflection):
         """
         Parameter available for additional tuning of the wake deflection with a
         lateral offset.
-
         ****TODO: Should this be removed? Not sure if it has been used.****
-
         **Note:** This is a virtual property used to "get" or "set" a value.
-
         Args:
             value (float): Value to set.
-
         Returns:
             float: Value currently set.
-
         Raises:
             ValueError: Invalid value.
         """
@@ -411,17 +373,12 @@ class Gauss(VelocityDeflection):
         """
         Parameter available for additional tuning of the wake deflection with a
         lateral offset.
-
         ****TODO: Should this be removed? Not sure if it has been used.****
-
         **Note:** This is a virtual property used to "get" or "set" a value.
-
         Args:
             value (float): Value to set.
-
         Returns:
             float: Value currently set.
-
         Raises:
             ValueError: Invalid value.
         """

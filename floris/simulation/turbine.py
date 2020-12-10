@@ -29,16 +29,20 @@ class Turbine(LoggerBase):
     """
     Turbine is a class containing objects pertaining to the individual
     turbines.
+
     Turbine is a model class representing a particular wind turbine. It
     is largely a container of data and parameters, but also contains
     methods to probe properties for output.
+
     Args:
         instance_dictionary: A dictionary that is generated from the
             input_reader; it should have the following key-value pairs:
+
             -   **description** (*str*): A string containing a description of
                 the turbine.
             -   **properties** (*dict*): A dictionary containing the following
                 key-value pairs:
+
                 -   **rotor_diameter** (*float*): The rotor diameter (m).
                 -   **hub_height** (*float*): The hub height (m).
                 -   **blade_count** (*int*): The number of blades.
@@ -50,12 +54,14 @@ class Turbine(LoggerBase):
                     efficiency factor used to scale the power production.
                 -   **power_thrust_table** (*dict*): A dictionary containing the
                     following key-value pairs:
+
                     -   **power** (*list(float)*): The coefficient of power at
                         different wind speeds.
                     -   **thrust** (*list(float)*): The coefficient of thrust
                         at different wind speeds.
                     -   **wind_speed** (*list(float)*): The wind speeds for
                         which the power and thrust values are provided (m/s).
+
                 -   **yaw_angle** (*float*): The yaw angle of the turbine
                     relative to the wind direction (deg). A positive value
                     represents a counter-clockwise rotation relative to the
@@ -65,6 +71,7 @@ class Turbine(LoggerBase):
                     the rotor for an upstream turbine.
                 -   **TSR** (*float*): The tip-speed ratio of the turbine. This
                     parameter is used in the "curl" wake model.
+
     Returns:
         Turbine: An instantiated Turbine object.
     """
@@ -83,8 +90,7 @@ class Turbine(LoggerBase):
         self.yaw_angle = properties["yaw_angle"]
         self.tilt_angle = properties["tilt_angle"]
         self.tsr = properties["TSR"]
-        self.ct = properties["Ct"]
-        self.cp = properties["Cp"]
+
         # initialize to an invalid value until calculated
         self.air_density = -1
         self.use_turbulence_correction = False
@@ -161,40 +167,33 @@ class Turbine(LoggerBase):
         return grid
 
     def _fCp(self, at_wind_speed):
-        if at_wind_speed != 1e3:
-            wind_speed = self.power_thrust_table["wind_speed"]
-            if at_wind_speed < min(wind_speed):
-                return 0.0
-            else:
-                _cp = self.fCpInterp(at_wind_speed)
-                if _cp.size > 1:
-                    _cp = _cp[0]
+        wind_speed = self.power_thrust_table["wind_speed"]
+        if at_wind_speed < min(wind_speed):
+            return 0.0
         else:
-            _cp = self.cp;
-        
-        return float(_cp)
+            _cp = self.fCpInterp(at_wind_speed)
+            if _cp.size > 1:
+                _cp = _cp[0]
+            return float(_cp)
 
     def _fCt(self, at_wind_speed):
-        if at_wind_speed != 1e3:
-            wind_speed = self.power_thrust_table["wind_speed"]
-            if at_wind_speed < min(wind_speed):
-                return 0.99
-            else:
-                _ct = self.fCtInterp(at_wind_speed)
-                if _ct.size > 1:
-                    _ct = _ct[0]
-                if _ct > 1.0:
-                    _ct = 0.9999
+        wind_speed = self.power_thrust_table["wind_speed"]
+        if at_wind_speed < min(wind_speed):
+            return 0.99
         else:
-            _ct = self.ct;
-            
-        return float(_ct)
+            _ct = self.fCtInterp(at_wind_speed)
+            if _ct.size > 1:
+                _ct = _ct[0]
+            if _ct > 1.0:
+                _ct = 0.9999
+            return float(_ct)
 
     # Public methods
 
     def change_turbine_parameters(self, turbine_change_dict):
         """
         Change a turbine parameter and call the initialize function.
+
         Args:
             turbine_change_dict (dict): A dictionary of parameters to change.
         """
@@ -210,6 +209,7 @@ class Turbine(LoggerBase):
         This method calculates and returns the wind speeds at each
         rotor swept area grid point for the turbine, interpolated from
         the flow field grid.
+
         Args:
             wind_direction (float): The wind farm wind direction (deg).
             local_wind_speed (np.array): The wind speed at each grid point in
@@ -218,6 +218,7 @@ class Turbine(LoggerBase):
             x (np.array): The x-coordinates of the flow field grid.
             y (np.array): The y-coordinates of the flow field grid.
             z (np.array): The z-coordinates of the flow field grid.
+
         Returns:
             np.array: The wind speed at each rotor grid point
             for the turbine (m/s).
@@ -262,10 +263,13 @@ class Turbine(LoggerBase):
     def return_grid_points(self, coord):
         """
         Retrieve the x, y, and z grid points on the rotor.
+
         Args:
             coord (:py:obj:`~.utilities.Vec3`): The coordinate of the turbine.
+
         Returns:
             np.array, np.array, np.array:
+
                 - x grid points on the rotor.
                 - y grid points on the rotor.
                 - xzgrid points on the rotor.
@@ -277,12 +281,13 @@ class Turbine(LoggerBase):
         return x_array, y_array, z_array
 
     def update_velocities(
-        self, u_wake, coord, flow_field, rotated_x, rotated_y, rotated_z
+        self, u_wake, coord, flow_field, rotated_x, rotated_y, rotated_z, known_global=False
     ):
         """
         This method updates the velocities at the rotor swept area grid
         points based on the flow field freestream velocities and wake
         velocities.
+
         Args:
             u_wake (np.array): The wake deficit velocities at all grid points
                 in the flow field (m/s).
@@ -294,12 +299,18 @@ class Turbine(LoggerBase):
                 rotated so the new x axis is aligned with the wind direction.
             rotated_z (np.array): The z-coordinates of the flow field grid
                 rotated so the new x axis is aligned with the wind direction.
+            known_global (boolean): Specifies whether u_wake should be treated as local wake information or as the global wind field
         """
         # reset the waked velocities
-        local_wind_speed = flow_field.u_initial - u_wake
+        if not known_global:
+            local_wind_speed = flow_field.u_initial - u_wake
+        else:
+            local_wind_speed = u_wake
+        #print("local_wind_speed:\n", local_wind_speed)
         self.velocities = self.calculate_swept_area_velocities(
             local_wind_speed, coord, rotated_x, rotated_y, rotated_z
         )
+        #print(self.velocities)
 
     def reset_velocities(self):
         """
@@ -311,10 +322,13 @@ class Turbine(LoggerBase):
     def set_yaw_angle(self, yaw_angle):
         """
         This method sets the turbine's yaw angle.
+
         Args:
             yaw_angle (float): The new yaw angle (deg).
+
         Examples:
             To set a turbine's yaw angle:
+
             >>> floris.farm.turbines[0].set_yaw_angle(20.0)
         """
         self._yaw_angle = yaw_angle
@@ -327,6 +341,7 @@ class Turbine(LoggerBase):
         This property calculates and returns the turbulence correction
         parameter for the turbine, a value used to account for the
         change in power output due to the effects of turbulence.
+
         Returns:
             float: The value of the turbulence parameter.
         """
@@ -365,13 +380,18 @@ class Turbine(LoggerBase):
         """
         This method returns the current turbulence intensity at
         the turbine expressed as a decimal fraction.
+
         **Note:** This is a virtual property used to "get" or "set" a value.
+
         Args:
             value (float): Value to set.
+
         Returns:
             float: Value currently set.
+
         Examples:
             To get the turbulence intensity for a turbine:
+
             >>> current_turbulence_intensity = floris.farm.turbines[0].turbulence_intensity()
         """
         return self._turbulence_intensity
@@ -384,11 +404,15 @@ class Turbine(LoggerBase):
     def rotor_radius(self):
         """
         This method returns the rotor radius of the turbine (m).
+
         **Note:** This is a virtual property used to "get" a value.
+
         Returns:
             float: The rotor radius of the turbine.
+
         Examples:
             To get the rotor radius for a turbine:
+
             >>> rotor_radius = floris.farm.turbines[0].rotor_radius()
         """
         return self.rotor_diameter / 2.0
@@ -397,19 +421,26 @@ class Turbine(LoggerBase):
     def yaw_angle(self):
         """
         This method gets or sets the turbine's yaw angle.
+
         **Note:** This is a virtual property used to "get"  or "set" a value.
+
         Args:
             value (float): Value to set.
+
         Returns:
             float: Value currently set.
+
         Examples:
             To set the yaw angle for each turbine in the wind farm:
+
             >>> yaw_angles = [20.0, 10.0, 0.0]
             >>> for yaw_angle, turbine in
             ... zip(yaw_angles, floris.farm.turbines):
             ...     turbine.yaw_angle = yaw_angle
+
             To get the current yaw angle for each turbine in the wind
             farm:
+
             >>> yaw_angles = []
             >>> for i, turbine in enumerate(floris.farm.turbines):
             ...     yaw_angles.append(turbine.yaw_angle())
@@ -424,13 +455,18 @@ class Turbine(LoggerBase):
     def tilt_angle(self):
         """
         This method gets the turbine's tilt angle.
+
         **Note:** This is a virtual property used to "get"  or "set" a value.
+
         Args:
             value (float): Value to set.
+
         Returns:
             float: Value currently set.
+
         Examples:
             To get the current tilt angle for a turbine:
+
             >>> tilt_angle = floris.farm.turbines[0].tilt_angle()
         """
         return self._tilt_angle
@@ -444,16 +480,17 @@ class Turbine(LoggerBase):
         """
         This property calculates and returns the cube root of the
         mean cubed velocity in the turbine's rotor swept area (m/s).
+
         Returns:
             float: The average velocity across a rotor.
+
         Examples:
             To get the average velocity for a turbine:
+
             >>> avg_vel = floris.farm.turbines[0].average_velocity()
         """
         # remove all invalid numbers from interpolation
-        #print(np.where(~np.isnan(self.velocities)))
         data = self.velocities[np.where(~np.isnan(self.velocities))]
-        #data = self.velocities;
         avg_vel = np.cbrt(np.mean(data ** 3))
         if np.isnan(avg_vel):
             avg_vel = 0
@@ -466,52 +503,64 @@ class Turbine(LoggerBase):
     def Cp(self):
         """
         This property returns the power coeffcient of a turbine.
+
         This property returns the coefficient of power of the turbine
         using the rotor swept area average velocity, interpolated from
         the coefficient of power table. The average velocity is
         calculated as the cube root of the mean cubed velocity in the
         rotor area.
+
         **Note:** The velocity is scalled to an effective velocity by the yaw.
+
         Returns:
             float: The power coefficient of a turbine at the current
             operating conditions.
+
         Examples:
             To get the power coefficient value for a turbine:
+
             >>> Cp = floris.farm.turbines[0].Cp()
         """
         # Compute the yaw effective velocity
         pW = self.pP / 3.0  # Convert from pP to pW
         yaw_effective_velocity = self.average_velocity * cosd(self.yaw_angle) ** pW
 
-        #return self._fCp(yaw_effective_velocity)
-        return self._fCp(1e3)
+        return self._fCp(yaw_effective_velocity)
+
     @property
     def Ct(self):
         """
         This property returns the thrust coefficient of a turbine.
+
         This method returns the coefficient of thrust of the yawed
         turbine, interpolated from the coefficient of power table,
         using the rotor swept area average velocity and the turbine's
         yaw angle. The average velocity is calculated as the cube root
         of the mean cubed velocity in the rotor area.
+
         Returns:
             float: The thrust coefficient of a turbine at the current
             operating conditions.
+
         Examples:
             To get the thrust coefficient value for a turbine:
+
             >>> Ct = floris.farm.turbines[0].Ct()
         """
-        #return self._fCt(self.average_velocity) * cosd(self.yaw_angle)  # **self.pP
-        return self._fCt(1e3)
+        return self._fCt(self.average_velocity) * cosd(self.yaw_angle)  # **self.pP
+
     @property
     def power(self):
         """
         This property returns the power produced by turbine (W),
         adjusted for yaw and tilt.
+
         Returns:
             float: Power of a turbine in watts.
+
         Examples:
             To get the power for a turbine:
+
             >>> power = floris.farm.turbines[0].power()
         """
         # Update to power calculation which replaces the fixed pP exponent with
@@ -525,7 +574,7 @@ class Turbine(LoggerBase):
         # Compute the yaw effective velocity
         pW = self.pP / 3.0  # Convert from pP to w
         yaw_effective_velocity = self.average_velocity * cosd(self.yaw_angle) ** pW
-
+        #print("yaw_effective_velocity:", yaw_effective_velocity)
         # Now compute the power
         cptmp = self.Cp  # Note Cp is also now based on yaw effective velocity
         return (
@@ -544,10 +593,13 @@ class Turbine(LoggerBase):
         This property returns the axial induction factor of the yawed
         turbine calculated from the coefficient of thrust and the yaw
         angle.
+
         Returns:
             float: Axial induction factor of a turbine.
+
         Examples:
             To get the axial induction factor for a turbine:
+
             >>> aI = floris.farm.turbines[0].aI()
         """
         return (

@@ -145,7 +145,7 @@ class Gauss(VelocityDeflection):
         )
         # opposite sign convention in this model
         tilt = turbine.tilt_angle
-        Ct = turbine.ct
+        Ct = turbine.Ct
 
         # U_local = flow_field.wind_map.grid_wind_speed
         # just a placeholder for now, should be initialized with the flow_field
